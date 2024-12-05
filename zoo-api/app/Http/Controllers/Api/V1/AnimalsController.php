@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Animals;
 use App\Models\Species;
 use App\Models\Enclosures;
+use App\Mail\AnimalCreated;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\Api\AnimalResource;
 use App\Http\Requests\Api\V1\StoreAnimalRequest;
 use App\Http\Requests\Api\V1\StoreEnclosureRequest;
-use App\Http\Resources\Api\AnimalResource;
 
 class AnimalsController extends Controller
 {
@@ -17,11 +19,16 @@ class AnimalsController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {   $animals = Animals::with('specie')->get();
-        //$animal = new AnimalResource(Animals::find(1));
+    {  
+        $animal = Animals::where('id',1)->first();
+        Mail::to('nouredine.moussa@ynov.com')->send(new AnimalCreated($animal));
+        return "Mail envoyé avec succès";
+        
+        /*  $animals = Animals::with('specie')->get();
+        $animal = new AnimalResource(Animals::find(1))
         $animals = AnimalResource::collection($animals)
          ->additional(['meta' => ['total_animals' => Animals::count()]]);
-        return $animals;
+        return $animals; */
     }
 
     /**
@@ -37,7 +44,7 @@ class AnimalsController extends Controller
         $animal -> name = $validated['name'];
 
         $specie = Species::where('id', $validated->species_id)->first();
-        $animal -> specie() -> associate();
+        $animal -> specie() -> associate($specie);
 
         $enclosure = Enclosures::where('idname', $validated->name)->first();
         $animal -> enclosure() -> associate();
